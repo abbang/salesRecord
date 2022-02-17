@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Node MySQL</title>
+    
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>{{title}}</title>
+        <link rel="stylesheet" type="text/css" href="../public/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.css">
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.4/css/dataTables.bootstrap4.min.css">
+    </head>
+    <style type="text/css">
+        h3{
+            text-align: center;
+            border-bottom: 1px solid #000;
+            margin-bottom: 3%;
+        }
+    </style>
+    <body>
+        <h3>Sales Record</h3>
+        <div class="col-md-12" id="import-bottom">
+            <input type="file"  name="filename" id="importFile">
+            <button  id="btnImport">Import</button>
+            <button id="btnExport">Export</button>
+        </div>
+
+        <div class="col-md-12">
+            <table id="banned-table" class="table table-striped table-bordered" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Username</th>
+                        <th>Age</th>
+                        <th>Height</th>
+                        <th>Gender</th>
+                        <th>Sales</th>
+                        <th>Last Purchase Date</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each result}}
+                    <tr>
+                        <td></td>
+                        <td>{{username}}</td>
+                        <td>{{age}}</td>
+                        <td>{{height}}</td>
+                        <td>{{gender}}</td>
+                        <td>{{sales}}</td>
+                        <td>{{last_purchase_date}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+        <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.11.4/js/dataTables.bootstrap4.min.js"></script>
+        <script src="/js/sweetalert.min.js"></script>
+        
+         <script type="text/javascript">
+
+            $(document).ready(function() {
+                $('#banned-table').DataTable();
+            });
+
+            /** FUNCTION FOR EXPORTING DATA **/
+            $('#import-bottom').on('click','#btnExport', function () {
+                let files = $('#importFile').val();
+                let filePaths = files.replace(/C:\\fakepath\\/i, '');
+                let datas = {
+                    file: filePaths
+                }
+
+                $.ajax({
+                    url: '/sales/report',
+                    method: 'POST',
+                    contentType: 'Application/json',
+                    data: JSON.stringify(datas),
+                    success: function (response) {
+                        if(response.status == 200) {
+                            swal('Exported Data Successfully').then(function(isConfirm){
+                                if(isConfirm) {
+                                    location.reload();
+                                }
+                            })
+                            
+                        } else {
+                            swal('Looks like something is wrong'); 
+                        }
+                    },
+                    error: function (err) {
+                        console.log(err)
+                    }
+                })
+            }) 
+
+
+            /** FUNCTION FOR IMPORTING DATA **/
+
+            $('#import-bottom').on('click','#btnImport', function () {
+            
+                var datas = $('#importFile').val();
+                let filePath = datas.replace(/C:\\fakepath\\/i, '');
+                if($('#importFile')[0].files.length != 1){
+                    $('#importFile').val('');
+                    swal('Please upload file.')
+                    return false;
+                } else {
+                    let objData = {
+                        files: filePath
+                    }
+
+                    $.ajax({
+                        url: '/sales/record',
+                        data: objData,
+                        method: 'POST',
+                        success: function (response) {
+                            if(response.status == 200) {
+                                swal('Imported Data Successfully').then(function(isConfirm){
+                                    if(isConfirm) {
+                                        location.reload();
+                                    }
+                                })
+                                
+                            } else if(response.status == 400) {
+                                swal('Username already exist');
+                            } else {
+                                swal('Looks like something is wrong'); 
+                            }
+                        },
+                        error: function (err) {
+                            console.log(err)
+                            swal('Error');
+                        }
+                    })
+                }
+                
+            }) 
+        </script> 
+    </body>
+</html>
